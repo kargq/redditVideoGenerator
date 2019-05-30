@@ -21,3 +21,7 @@ def gen_comment_image(author, content):
 def create_comment_clip(author, content):
     background_clip = ImageClip(gen_comment_image(author=author, content=content))
     return background_clip.set_duration(10)
+
+def gen_audio_clip(text):
+
+    

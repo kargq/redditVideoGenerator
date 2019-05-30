@@ -1,4 +1,3 @@
-import imgkit
 from moviepy.editor import *
 import datetime as dt
 import pandas as pd
