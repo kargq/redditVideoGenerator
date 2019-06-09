@@ -1,3 +1,4 @@
+import textwrap
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -10,20 +11,54 @@ from pydub.playback import play
 from gtts import gTTS
 from io import BytesIO
 
+from moviepy.audio.fx.audio_fadein import audio_fadein
+from moviepy.audio.fx.audio_fadeout import audio_fadeout
+from moviepy.audio.fx.audio_left_right import audio_left_right
+from moviepy.audio.fx.audio_loop import audio_loop
+from moviepy.audio.fx.audio_normalize import audio_normalize
+from moviepy.audio.fx.volumex import volumex
+
 WIDTH = 1920
 HEIGHT = 1080
 BACKGROUND_TRACK = "assets/tetris_loop.wav"
 TRANSITION_CLIP = "assets/static_transition.mov"
 INTRO_CLIP = "assets/logo_appear.mov"
+HARD_LINE_BREAK_AFTER = 90
 
 
 def gen_comment_image(author, content):
+    content = process_content(content)
     img = Image.new('RGB', (WIDTH, HEIGHT), color=(26, 26, 27))
     fnt = ImageFont.truetype('sans-serif.ttf', 45)
     d = ImageDraw.Draw(img)
     d.text((10, 10), author, fill=(79, 188, 255), font=fnt)
-    d.text((10, 60), content, fill=(255, 255, 255), font=fnt)
+    d.multiline_text((10, 60), content, fill=(
+        255, 255, 255), font=fnt, align="left")
     return np.array(img)
+
+
+def process_content(text):
+    # need to add removal of profain words.
+    return add_newlines(text)
+
+def add_newlines(text):
+    res: str = ""
+    curr = 0
+    last_space_pos = 0
+    for index, char in enumerate(text):
+        last_space_pos = index if char == ' ' else last_space_pos
+        if curr < HARD_LINE_BREAK_AFTER:
+            curr = curr + 1
+        else:
+            curr = 0
+            # res = res + "-\n"
+            res = change_char(res, last_space_pos, '\n')
+        res = res + char
+    return res
+
+
+def change_char(s, p, r):
+    return s[:p]+r+s[p+1:]
 
 
 def gen_title_message_image(msg):
@@ -65,16 +100,20 @@ def audio_concatenate(clips):
     return CompositeAudioClip(newclips).set_duration(tt[-1])
 
 
-def audio_loop(clip, duration):
+def audio_loop_(clip, duration):
     nloops = int(duration / clip.duration)+1
     return audio_concatenate(nloops*[clip]).set_duration(duration)
 
+
 def gen_background_audio_clip(length: int):
-    return audio_loop(AudioFileClip(BACKGROUND_TRACK), length)
+    return audio_loop_(AudioFileClip(BACKGROUND_TRACK), length)
+
 
 def gen_transition_clip():
-    return VideoFileClip(TRANSITION_CLIP)
+    clip = VideoFileClip(TRANSITION_CLIP)
+    clip.audio = clip.audio.fx(volumex, 0.3)
+    return clip
+
 
 def gen_intro_clip():
     return VideoFileClip(INTRO_CLIP)
-

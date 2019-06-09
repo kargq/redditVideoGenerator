@@ -1,15 +1,8 @@
 import praw
 from clips import *
 
-from moviepy.audio.fx.audio_fadein import audio_fadein
-from moviepy.audio.fx.audio_fadeout import audio_fadeout
-from moviepy.audio.fx.audio_left_right import audio_left_right
-from moviepy.audio.fx.audio_loop import audio_loop
-from moviepy.audio.fx.audio_normalize import audio_normalize
-from moviepy.audio.fx.volumex import volumex
-
 FPS = 30
-DURATION: int = 60 * 0.5
+DURATION: int = 60 * 10
 BACKGROUND_TRACK_VOLUME = 0.12
 # DURATION: int = 60 * 10
 
