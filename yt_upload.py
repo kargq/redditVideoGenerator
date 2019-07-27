@@ -5,6 +5,7 @@ import random
 import sys
 import time
 
+from types import SimpleNamespace
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 from apiclient.http import MediaFileUpload
@@ -150,6 +151,13 @@ def resumable_upload(insert_request):
             time.sleep(sleep_seconds)
 
 
+def upload_video(path, description, title, keywords):
+    args = SimpleNamespace(auth_host_name='localhost', auth_host_port=[8080, 8090], category='22', description=description, file=path,
+                           keywords=keywords, logging_level='ERROR', noauth_local_webserver=False, privacyStatus='public', title=title)
+    youtube = get_authenticated_service(args)
+    initialize_upload(youtube, args)
+
+
 if __name__ == '__main__':
     argparser.add_argument("--file", required=True,
                            help="Video file to upload")
@@ -164,6 +172,7 @@ if __name__ == '__main__':
     argparser.add_argument("--privacyStatus", choices=VALID_PRIVACY_STATUSES,
                            default=VALID_PRIVACY_STATUSES[0], help="Video privacy status.")
     args = argparser.parse_args()
+    print("Arguments", args)
 
     if not os.path.exists(args.file):
         exit("Please specify a valid file using the --file= parameter.")

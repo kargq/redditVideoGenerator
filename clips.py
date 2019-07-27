@@ -1,3 +1,5 @@
+import string
+import random
 import textwrap
 from PIL import Image
 from PIL import ImageDraw
@@ -17,6 +19,8 @@ from moviepy.audio.fx.audio_left_right import audio_left_right
 from moviepy.audio.fx.audio_loop import audio_loop
 from moviepy.audio.fx.audio_normalize import audio_normalize
 from moviepy.audio.fx.volumex import volumex
+
+from pathlib import Path
 
 WIDTH = 1920
 HEIGHT = 1080
@@ -40,6 +44,7 @@ def gen_comment_image(author, content):
 def process_content(text):
     # need to add removal of profain words.
     return add_newlines(text)
+
 
 def add_newlines(text):
     res: str = ""
@@ -81,15 +86,27 @@ def create_comment_clip(author, content):
     background_clip = ImageClip(
         gen_comment_image(author=author, content=content))
     audio_clip = gen_audio_clip(content)
+    # audio_clip.preview()
+    # duration is determined by the audio clip duration
     background_clip = background_clip.set_duration(audio_clip.duration)
     background_clip = background_clip.set_audio(audio_clip)
+    # background_clip.preview()
     return background_clip
+
+
+def randomStringDigits(stringLength=6):
+    """Generate a random string of letters and digits """
+    lettersAndDigits = string.ascii_letters + string.digits
+    return ''.join(random.choice(lettersAndDigits) for i in range(stringLength))
 
 
 def gen_audio_clip(text):
     tts = gTTS(text, 'en')
-    tts.save("temp.mp3")
-    clip = AudioFileClip("temp.mp3")
+    name = "rtemp" + randomStringDigits(8) + ".mp3"
+    tts.save(name)
+    clip = AudioFileClip(name)
+    # delete the rtemp file
+    clean_temp()
     return clip
 
 
@@ -117,3 +134,8 @@ def gen_transition_clip():
 
 def gen_intro_clip():
     return VideoFileClip(INTRO_CLIP)
+
+
+def clean_temp():
+    for p in Path(".").glob("rtemp*"):
+        p.unlink()

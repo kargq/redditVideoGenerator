@@ -3,3 +3,5 @@ venv/
 .vscode
 __pycache__
 media/
+# client_secrets.json
+# yt_upload.py-oauth2.json
