@@ -1,6 +1,14 @@
+#!./venv/bin/python
 import praw
 from clips import *
 from yt_upload import upload_video
+from tinydb import TinyDB, Query
+from itertools import islice, count
+import json
+
+db = TinyDB('log/db.json')
+created_vids_db = db.table('created_videos')
+uploaded_vids_db = db.table('uploaded_vids')
 
 FPS = 30
 # DURATION: int = 25
@@ -33,6 +41,8 @@ def create_submission_video(submission, save_path):
     submission.comments.replace_more(limit=50)
     for comment in submission.comments:
         print("\nComment: ", comment.body if comment.body else "[deleted]")
+        if not comment.body:
+            continue
         temp = create_comment_clip(
             author=comment.author.name if comment.author else "[deleted]",
             content=comment.body if comment.body else "[deleted]")
@@ -50,13 +60,21 @@ def create_submission_video(submission, save_path):
     concat_clip.audio = CompositeAudioClip(
         [background_audio, concat_clip.audio])
     concat_clip.write_videofile(save_path, fps=FPS)
+    created_vids_db.insert({'permanent_url': submission.permalink, 'url': submission.url})
 
 
 print("Subscribe or i'll end humanity.")
 
+with open('reddit_secret.json') as f:
+    secret = json.load(f)
+
 reddit = praw.Reddit(client_id='cr4TmbMtqyHJgQ',
                      client_secret='W63uiFhtJY3Lmy87lLlr0zZReRY',
                      user_agent='kindeep')
+
+# reddit = praw.Reddit(client_id=secret["client_id"],
+#                      client_secret=secret["client_secret"],
+#                      user_agent=secret["user_agent"])
 
 type = input("1. Top 2. Custom 3. Hot: ")
 
@@ -72,9 +90,19 @@ if int(type) == 1:
         submission.sort = 'top'
         path = "rtemp" + str(index) + ".mp4"
         create_submission_video(submission, path)
-        upload_video(path, description="", title="AskReddit: " +
-                                                 submission.title, keywords="AskReddit, Reddit")
+        uploaded = True
+        upload_response = None
+        try:
+            upload_video(path, description="", title="AskReddit: " +
+                                                     submission.title, keywords="AskReddit, Reddit")
+        except:
+            uploaded = False
+        if uploaded:
+            uploaded_vids_db.insert(
+                {"reddit_url": submission.url, "permanent_reddit_url": submission.permalink,
+                 "youtube": upload_response})
         clean_temp()
+
 elif int(type) == 2:
     url = input("Enter subreddit submission url: ")
     submission = praw.models.Submission(reddit, url=url)
@@ -84,19 +112,43 @@ elif int(type) == 2:
     submission.sort = 'top'
     path = "media/" + submission.title + "_" + submission.id + ".mp4"
     create_submission_video(submission, path)
-    upload_video(path,
-                 description=DESCRIPTION + "Link to subreddit post: " + url + "\n" + submission.title,
-                 title="AskReddit: " + submission.title, keywords="AskReddit, Reddit")
+    uploaded = True
+    upload_response = None
+    try:
+        uploaded_respone = upload_video(path,
+                                        description=DESCRIPTION + "Link to subreddit post: " + url + "\n" + submission.title,
+                                        title="AskReddit: " + submission.title, keywords="AskReddit, Reddit")
+    except:
+        uploaded = False
+    if uploaded:
+        uploaded_vids_db.insert(
+            {"reddit_url": url, "permanent_reddit_url": submission.permalink, "youtube": upload_response})
+
 elif int(type) == 3:
     a_subreddit = reddit.subreddit('AskReddit')
     print(a_subreddit.display_name, '\n' + ('=' * len(a_subreddit.display_name)))
-    for index, submission in enumerate(a_subreddit.hot(limit=1)):
-        print("\nTitle:", submission.title)
-        print("Author:", submission.author)
-        print("\n")
-        submission.sort = 'top'
-        path = "rtemp" + str(index) + ".mp4"
-        create_submission_video(submission, path)
-        upload_video(path, description="", title="AskReddit: " +
-                                                 submission.title, keywords="AskReddit, Reddit")
-        clean_temp()
+    # for index, submission in enumerate(a_subreddit.hot(limit=1)):
+
+    # submission = a_subreddit.hot(limit=1).__next__(islice(count(), 0, 0 + 1))
+    submission = list(a_subreddit.hot(limit=1))[0]
+    print("\nTitle:", submission.title)
+    print("URL: " + submission.url)
+    print("Author:", submission.author)
+    print("\n")
+    submission.sort = 'top'
+    path = "rtemp" + ".mp4"
+    create_submission_video(submission, path)
+    uploaded = True
+    upload_response = None
+    try:
+        upload_response = upload_video(path,
+                                       description=DESCRIPTION + "Link to subreddit post: " + submission.url + "\n" +
+                                                   submission.title, title="AskReddit: " +
+                                                                           submission.title,
+                                       keywords="AskReddit, Reddit")
+    except:
+        uploaded = False
+    if uploaded:
+        uploaded_vids_db.insert(
+            {"reddit_url": submission.url, "permanent_reddit_url": submission.permalink, "youtube": upload_response})
+    clean_temp()

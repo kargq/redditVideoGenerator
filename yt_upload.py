@@ -120,7 +120,7 @@ def initialize_upload(youtube, options):
         media_body=MediaFileUpload(options.file, chunksize=-1, resumable=True)
     )
 
-    resumable_upload(insert_request)
+    return resumable_upload(insert_request)
 
 # This method implements an exponential backoff strategy to resume a
 # failed upload.
@@ -149,13 +149,15 @@ def resumable_upload(insert_request):
             sleep_seconds = random.random() * max_sleep
             print("Sleeping %f seconds and then retrying..." % sleep_seconds)
             time.sleep(sleep_seconds)
+    return response
 
 
+# https://developers.google.com/youtube/v3/docs/videos#resource is return
 def upload_video(path, description, title, keywords):
     args = SimpleNamespace(auth_host_name='localhost', auth_host_port=[8080, 8090], category='22', description=description, file=path,
                            keywords=keywords, logging_level='ERROR', noauth_local_webserver=False, privacyStatus='public', title=title)
     youtube = get_authenticated_service(args)
-    initialize_upload(youtube, args)
+    return initialize_upload(youtube, args)
 
 
 if __name__ == '__main__':
