@@ -156,6 +156,7 @@ def resumable_upload(insert_request):
 def upload_video(path, description, title, keywords):
     args = SimpleNamespace(auth_host_name='localhost', auth_host_port=[8080, 8090], category='22', description=description, file=path,
                            keywords=keywords, logging_level='ERROR', noauth_local_webserver=False, privacyStatus='public', title=title)
+    print("Trying to start upload")
     youtube = get_authenticated_service(args)
     return initialize_upload(youtube, args)
 

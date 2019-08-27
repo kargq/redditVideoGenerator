@@ -13,7 +13,8 @@ uploaded_vids_db = db.table('uploaded_vids')
 FPS = 30
 # DURATION: int = 25
 BACKGROUND_TRACK_VOLUME = 0.12
-DURATION: int = 60 * 10
+DURATION: int = 60 * 4
+# DURATION: int = 60 * 10
 DESCRIPTION = "Yes I'm an actual robot. \n"
 
 
@@ -27,7 +28,26 @@ def write_to_log(text):
     f.close()
 
 
+def check_video_in_db(url):
+    vid = Query()
+    # Search db for already created video
+    found_val = uploaded_vids_db.search(vid.permanent_reddit_url == url)
+    print(found_val)
+    if found_val:
+        print()
+        valid_in = ["Y", 'y', 'N', 'n']
+        choice = None
+        while not valid_in.__contains__(choice):
+            choice = input("Video already uploaded, do you still want to create the video? (Y/N): ")
+        return choice == 'Y' or choice == 'y'
+    else:
+        return False
+
+
 def create_submission_video(submission, save_path):
+    if not check_video_in_db(submission.permalink):
+        print("Okay, exititng ...")
+        exit(0)
     clips = []
     enm_imgs = 0
     curr_duration: int = 0
