@@ -10,7 +10,7 @@ _temp_idk
 *.mp3
 
 # Authorization files
-# client_secrets.json
+client_secrets.json
 reddit_secret.json
 *py-oauth2.json
 *py-oauth2.json

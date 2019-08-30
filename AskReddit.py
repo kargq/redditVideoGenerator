@@ -33,21 +33,22 @@ def check_video_in_db(url):
     # Search db for already created video
     found_val = uploaded_vids_db.search(vid.permanent_reddit_url == url)
     print(found_val)
-    if found_val:
-        print()
-        valid_in = ["Y", 'y', 'N', 'n']
-        choice = None
-        while not valid_in.__contains__(choice):
-            choice = input("Video already uploaded, do you still want to create the video? (Y/N): ")
-        return choice == 'Y' or choice == 'y'
+    if len(found_val) > 0:
+        return True
     else:
         return False
 
 
 def create_submission_video(submission, save_path):
-    if not check_video_in_db(submission.permalink):
-        print("Okay, exititng ...")
-        exit(0)
+    if check_video_in_db(submission.permalink):
+        valid_in = ['Y', 'y', 'N', 'n']
+        choice = None
+        while not valid_in.__contains__(choice):
+            choice = input("Video already uploaded, do you still want to create the video? (Y/N): ")
+        if not(choice == 'Y' or choice == 'y'):
+            print("Okay, exiting.")
+            return
+
     clips = []
     enm_imgs = 0
     curr_duration: int = 0
