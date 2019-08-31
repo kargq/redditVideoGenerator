@@ -43,14 +43,7 @@ while True:
 
         def create_submission_video(submission, save_path):
             if check_video_in_db(submission.permalink):
-                valid_in = ['Y', 'y', 'N', 'n']
-                choice = None
-                while not valid_in.__contains__(choice):
-                    choice = input("Video already uploaded, do you still want to create the video? (Y/N): ")
-                if not(choice == 'Y' or choice == 'y'):
-                    print("Okay, exiting.")
-                    return
-
+                return
             clips = []
             enm_imgs = 0
             curr_duration: int = 0
